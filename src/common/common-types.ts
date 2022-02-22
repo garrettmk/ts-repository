@@ -33,11 +33,11 @@ export type StringOperator =
   | { re: RegExp }
   | { empty: boolean };
 
-export type ArrayOperator<T> =
+export type ArrayOperator<T = any> =
   | { length: number | NumericOperator }
   | { includes: T }
 
-export type GenericOperator<T> =
+export type GenericOperator<T = any> =
   | { eq: T }
   | { ne: T };
 
@@ -46,6 +46,9 @@ export type ValueQueryOperator<T> =
   T extends string ? StringOperator : 
   T extends any[] ? ArrayOperator<T> :
   GenericOperator<T>;
+
+export type ValueQueryOperatorKey<T extends ValueQueryOperator<any> = ValueQueryOperator<any>> =
+  T extends ValueQueryOperator<any> ? keyof T : never;
 
 // A field in a query
 export type ValueQueryField<T> = 

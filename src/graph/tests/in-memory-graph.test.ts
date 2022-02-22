@@ -1,6 +1,28 @@
 import { InMemoryGraphRepository } from "@/graph/in-memory-graph";
-import { CreateInput, GraphRepository, CreateNodeInput } from "..";
+import { CreateInput, GraphRepository, CreateNodeFields, Query, UpdateInput } from "..";
 import { Author, Document, TestEdge, testGraph, TestRelations, testGraphRelations, TestNode, User, TestGraph } from './test-graph-data';
+
+
+
+const findinput: Query<TestGraph, Document> = {
+  type: 'document',
+  authors: [{
+    id: 'steve'
+  }]
+}
+
+const updateInput: UpdateInput<TestGraph, Document> = {
+  type: 'document',
+  title: 'Doc',
+  pages: 1
+}
+
+const createInput: CreateInput<TestGraph, Document> = {
+  type: 'document',
+  title: 'Doc',
+  pages: 1,
+}
+
 
 
 describe('test constructor', () => {

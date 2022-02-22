@@ -80,11 +80,11 @@ export type RelatedType<TGraph extends Graph, TN extends NodeType<TGraph>, key e
 
 
 export type Query<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
-  TN extends NodeType<TGraph> 
-    ? Pick<TN, 'type'> & NodeQuery<TGraph, TN> 
-    : never;
+  & Pick<TN, 'type'> 
+  & ValueQueryFields<TN>
+  & RelationQueryFields<TGraph, TN>;
 
-export type NodeQuery<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
+export type NodeQueryFields<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
   & ValueQueryFields<TN>
   & RelationQueryFields<TGraph, TN>;
 
@@ -98,7 +98,7 @@ export type RelationQueryFields<TGraph extends Graph, TN extends NodeType<TGraph
 
 export type RelationQueryField<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>, key extends keyof RelationsForType<TGraph, TN> = keyof RelationsForType<TGraph, TN>> =
   | ArrayOperator<never>
-  | NodeQuery<TGraph, RelatedType<TGraph, TN, key>>[];
+  | NodeQueryFields<TGraph, RelatedType<TGraph, TN, key>>[];
 
 
   
@@ -106,12 +106,15 @@ export type RelationQueryField<TGraph extends Graph, TN extends NodeType<TGraph>
 
 
 
-export type CreateInput<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
-  TN extends NodeType<TGraph> 
-    ? Pick<TN, 'type'> & CreateNodeInput<TGraph, TN> 
-    : never;
+// export type CreateInput<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
+//   TN extends NodeType<TGraph> ? CreateNodeInput<TGraph, TN> : never;
 
-export type CreateNodeInput<TGraph extends Graph, TN extends NodeType<TGraph>> =
+export type CreateInput<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
+  & Pick<TN, 'type'>
+  & CreateValueFields<TN>
+  & CreateRelationFields<TGraph, TN>
+
+export type CreateNodeFields<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
   & CreateValueFields<TN>
   & CreateRelationFields<TGraph, TN>;
 
@@ -121,32 +124,32 @@ export type CreateRelationFields<TGraph extends Graph, TN extends NodeType<TGrap
   [key in keyof RelationsForType<TGraph, TN>]?: CreateRelationField<TGraph, TN, key>
 }
 
-export type CreateRelationField<TGraph extends Graph, TN extends NodeType<TGraph>, key extends keyof RelationsForType<TGraph, TN>> =
+export type CreateRelationField<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>, key extends keyof RelationsForType<TGraph, TN> = keyof RelationsForType<TGraph, TN>> =
   MaybeArray<CreateRelatedNodeInput<TGraph, TN, key> | NodeRef>;
 
 export type CreateRelatedNodeInput<TGraph extends Graph, TN extends NodeType<TGraph>, key extends keyof RelationsForType<TGraph, TN>> =
-  CreateNodeInput<TGraph, RelatedType<TGraph, TN, key>>;
+  CreateNodeFields<TGraph, RelatedType<TGraph, TN, key>>;
 
 
 
 
 export type UpdateInput<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
-  TN extends NodeType<TGraph> ? UpdateNodeInput<TGraph, TN> : never;
+  & Pick<TN, 'type'>
+  & UpdateNodeInput<TGraph, TN>;
 
 export type UpdateNodeInput<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
-  & Pick<TN, 'type'>
   & UpdateValueFields<TN>
   & UpdateRelationFields<TGraph, TN>;
 
 export type UpdateValueFields<TN extends Node> = Omit<TN, 'id' | 'type'>;
 
-export type UpdateRelationFields<TGraph extends Graph, TN extends NodeType<TGraph>> = {
+export type UpdateRelationFields<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> = {
   [key in keyof RelationsForType<TGraph, TN>]?: UpdateRelationField<TGraph, TN, key>
 }
 
-export type UpdateRelationField<TGraph extends Graph, TN extends NodeType<TGraph>, key extends keyof RelationsForType<TGraph, TN>> = {
-  add?: MaybeArray<Omit<NodeQuery<TGraph, RelatedType<TGraph, TN, key>>, 'type'>>,
-  remove?: MaybeArray<Omit<NodeQuery<TGraph, RelatedType<TGraph, TN, key>>, 'type'>>
+export type UpdateRelationField<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>, key extends keyof RelationsForType<TGraph, TN> = keyof RelationsForType<TGraph, TN>> = {
+  add?: MaybeArray<NodeQueryFields<TGraph, RelatedType<TGraph, TN, key>>>,
+  remove?: MaybeArray<NodeQueryFields<TGraph, RelatedType<TGraph, TN, key>>>
 }
 
 
@@ -155,6 +158,7 @@ export type UpdateRelationField<TGraph extends Graph, TN extends NodeType<TGraph
 export type NodeModel<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
   & { [key in keyof TN]: TN[key] }
   & { [key in keyof RelationsForType<TGraph, TN>]: NodeModel<TGraph, RelatedType<TGraph, TN, key>>[] };
+
 
 // A graph repository
 export interface GraphRepository<TGraph extends Graph> {
@@ -169,4 +173,8 @@ export interface GraphRepository<TGraph extends Graph> {
   update<TN extends NodeType<TGraph>>(id: ID, updates: UpdateInput<TGraph, TN>) : NodeModel<TGraph, TN>
   update<TN extends NodeType<TGraph>>(ids: ID[], updates: UpdateInput<TGraph, TN>) : NodeModel<TGraph, TN>[]
   update<TN extends NodeType<TGraph>>(query: Query<TGraph, TN>, updates: UpdateInput<TGraph, TN>) : NodeModel<TGraph, TN>[]
+
+  delete<TN extends NodeType<TGraph>>(id: ID) : TN
+  delete<TN extends NodeType<TGraph>>(ids: ID[]) : TN[]
+  delete<TN extends NodeType<TGraph>>(query: Query<TGraph, TN>) : TN[]
 }

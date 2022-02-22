@@ -50,3 +50,14 @@ function matchQueryField<T>(queryField: T | T[] | ValueQueryOperator<T>, value: 
 
   throw new ValidationError(`Invalid query field: ${queryField}`, ['0'], ['primitive', 'array', 'QueryOperator'], queryField);
 }
+
+
+// A version of Object.entries() with better type support
+export type Entry<T extends {}, K extends keyof T = keyof T> =
+  K extends keyof T ? [K, T[K]] : never;
+
+export type Entries<T extends {}> = Entry<T>[];
+
+export function objectEntries<T extends {}>(obj: T) : Entries<T> {
+  return Object.entries(obj) as unknown as Entries<T>;
+}
